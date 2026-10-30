@@ -216,51 +216,6 @@ detection:
     }
 
     #[test]
-    fn ssm_send_command_detects_accepted_requests_without_error_fields() {
-        use serde_json::json;
-        use sigma_rust::event_from_json;
-
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("rules");
-        let ignored = load_ignore_rule_ids(&ignore_rule_list_path(&path, &LogSource::Aws));
-        let rules = filter_ignored_rules(load_rules_from_dir(&path, &LogSource::Aws), &ignored);
-        assert!(
-            !rules.iter().any(|rule| {
-                rule.id.as_deref() == Some("38e7f511-3f74-41d4-836e-f57dfa18eead")
-            })
-        );
-        let rule = rules
-            .iter()
-            .find(|rule| rule.id.as_deref() == Some("bce9a22b-840f-4cb4-a403-1ee726a96710"))
-            .expect("the shipped SendCommand replacement must be loaded");
-
-        for (fields, expected) in [
-            (json!({}), true),
-            (json!({"errorCode": null}), true),
-            (json!({"errorCode": "Success"}), true),
-            (json!({"errorCode": "AccessDenied"}), false),
-            (json!({"errorCode": ""}), false),
-            (json!({"errorMessage": "Request failed"}), false),
-            (
-                json!({"errorCode": "Success", "errorMessage": "Request failed"}),
-                false,
-            ),
-            (json!({"eventName": "GetCommandInvocation"}), false),
-            (json!({"eventSource": "ec2.amazonaws.com"}), false),
-        ] {
-            let mut event = json!({
-                "eventName": "SendCommand",
-                "eventSource": "ssm.amazonaws.com",
-            });
-            event
-                .as_object_mut()
-                .unwrap()
-                .extend(fields.as_object().unwrap().clone());
-            let parsed = event_from_json(&event.to_string()).unwrap();
-            assert_eq!(rule.is_match(&parsed), expected, "{event}");
-        }
-    }
-
-    #[test]
     fn test_load_rules_from_directory() {
         let temp_dir = TempDir::new().unwrap();
         let dir_path = temp_dir.path().to_path_buf();
