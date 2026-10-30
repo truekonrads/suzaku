@@ -185,7 +185,7 @@ fn pull_repository(input_repo: &Repository, no_color: bool) -> Result<String, gi
 /// git clone でhauyabusa-rules レポジトリをrulesフォルダにgit cloneする関数
 fn clone_rules(rules_path: &Path, no_color: bool) -> Result<String, git2::Error> {
     match Repository::clone(
-        "https://github.com/Yamato-Security/suzaku-rules.git",
+        "https://github.com/truekonrads/suzaku-rules.git",
         rules_path,
     ) {
         Ok(_repo) => {
